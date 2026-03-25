@@ -52,10 +52,8 @@ sh scan.sh --source-name prod-server-01
 
 1. **Installs ggshield** if not already present (`pip install ggshield`).
 2. **Authenticates** with GitGuardian — uses the `GITGUARDIAN_API_KEY`
-   environment variable if set, otherwise checks for stored ggshield
-   credentials and prompts `ggshield auth login` if needed.
-3. **Verifies token permissions** — checks that the token has the
-   `incidents:write` and `sources:write` scopes required to create incidents
+   environment variable
+3. **Verifies token permissions**
    and sources in the dashboard. Exits with a clear error if any scope is
    missing.
 4. **Creates a source** in the GitGuardian dashboard under the name you
@@ -68,9 +66,5 @@ sh scan.sh --source-name prod-server-01
 
 ## Notes
 
-- Source creation and permission checks require `GITGUARDIAN_API_KEY` to be
-  set. Running without it falls back to interactive `ggshield auth login` for
-  the scan only, but the script will exit if `--source-name` is provided
-  without the key.
 - The ZIP archive is not deleted after the scan. Remove it manually if needed.
 - The script is POSIX sh compatible and runs on any Unix-like system.
