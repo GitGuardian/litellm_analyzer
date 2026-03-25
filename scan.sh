@@ -6,15 +6,13 @@ set -eu
 #           incidents in the GitGuardian dashboard.
 #
 # Usage:
-#   sh scan.sh [--send --source-name NAME] [--output OUTPUT.zip]
+#   sh scan.sh --source-name NAME [--send] [--output OUTPUT.zip]
 #
 # Without --send the script only harvests credentials into the output archive.
 # With --send it also creates a GG source and scans with ggshield.
 #
 # Environment:
-#   GITGUARDIAN_API_KEY  API token (required for source creation and permission
-#                        checks; if not set, stored ggshield credentials are
-#                        used for the scan but source creation will be skipped)
+#   GITGUARDIAN_API_KEY  API token (required)
 # ---------------------------------------------------------------------------
 
 GG_API="https://api.gitguardian.com"
@@ -31,17 +29,16 @@ info() { echo "[*] $*"; }
 
 usage() {
     cat >&2 <<EOF
-Usage: $0 [--send --source-name NAME] [--output OUTPUT.zip]
+Usage: $0 --source-name NAME [--send] [--output OUTPUT.zip]
 
 Options:
-  --send               Send results to GitGuardian (create source + scan)
-  --source-name NAME   GitGuardian source name (required when --send is used)
+  --send               Send results to GitGuardian (scan with ggshield)
+  --source-name NAME   GitGuardian source name (required)
   --output PATH        Output ZIP path for gather_files.py
                        (default: harvested_credentials.zip)
 
 Environment:
-  GITGUARDIAN_API_KEY  GitGuardian API token; if not set, ggshield stored
-                       credentials are used (source creation requires the key)
+  GITGUARDIAN_API_KEY  GitGuardian API token (required)
 EOF
     exit 1
 }
@@ -59,9 +56,7 @@ while [ $# -gt 0 ]; do
     esac
 done
 
-if $SEND; then
-    [ -n "$SOURCE_NAME" ] || die "--source-name is required when using --send"
-fi
+[ -n "$SOURCE_NAME" ] || die "--source-name is required"
 
 # ---------------------------------------------------------------------------
 # Step 1: Install ggshield if not present
@@ -90,31 +85,21 @@ info "ggshield $ggshield_version"
 # Step 2: Authentication
 # ---------------------------------------------------------------------------
 GG_API_KEY="${GITGUARDIAN_API_KEY:-}"
-
-if [ -n "$GG_API_KEY" ]; then
-    info "Using GITGUARDIAN_API_KEY from environment"
-    export GITGUARDIAN_API_KEY="$GG_API_KEY"
-else
-    info "GITGUARDIAN_API_KEY not set — checking stored ggshield credentials..."
-    if ! ggshield auth status > /dev/null 2>&1; then
-        info "Not authenticated. Launching ggshield auth login..."
-        ggshield auth login --scopes "scan scan:create-incidents sources:write" || die "Authentication failed"
-    fi
-    info "ggshield is authenticated via stored credentials"
-fi
+[ -n "$GG_API_KEY" ] || die "GITGUARDIAN_API_KEY environment variable is required"
+export GITGUARDIAN_API_KEY="$GG_API_KEY"
+info "Using GITGUARDIAN_API_KEY from environment"
 
 # ---------------------------------------------------------------------------
-# Step 3: Verify token permissions (requires API key)
+# Step 3: Verify token permissions
 # ---------------------------------------------------------------------------
-if [ -n "$GG_API_KEY" ]; then
-    info "Verifying token permissions..."
+info "Verifying token permissions..."
 
-    TOKEN_INFO=$(curl -sf \
-        -H "Authorization: Token $GG_API_KEY" \
-        "$GG_API/v1/token") \
-        || die "Failed to reach GitGuardian API — check your token and network"
+TOKEN_INFO=$(curl -sf \
+    -H "Authorization: Token $GG_API_KEY" \
+    "$GG_API/v1/token") \
+    || die "Failed to reach GitGuardian API — check your token and network"
 
-    MISSING=$(python3 - "$TOKEN_INFO" <<'PYEOF'
+MISSING=$(python3 - "$TOKEN_INFO" <<'PYEOF'
 import sys, json
 info = json.loads(sys.argv[1])
 scopes = info.get("scope", [])
@@ -125,19 +110,14 @@ if missing:
 PYEOF
 )
 
-    if [ -n "$MISSING" ]; then
-        die "Token is missing required scope(s): $MISSING"
-    fi
-    info "Token permissions OK ("scan:create-incidents", "sources:write")"
+if [ -n "$MISSING" ]; then
+    die "Token is missing required scope(s): $MISSING"
 fi
+info "Token permissions OK ("scan:create-incidents", "sources:write")"
 
 # ---------------------------------------------------------------------------
 # Step 4: Create source
 # ---------------------------------------------------------------------------
-if [ -z "$GG_API_KEY" ]; then
-    die "Creating a source requires GITGUARDIAN_API_KEY to be set"
-fi
-
 info "Creating source '$SOURCE_NAME'..."
 SOURCE_RESP=$(curl -sf -X POST \
     -H "Authorization: Token $GG_API_KEY" \

@@ -9,13 +9,13 @@ First, clone the repository on the infected machine.
 
 - Python 3 with `pip`
 - `curl`
-- A GitGuardian API token with the `incidents:write` and `sources:write`
+- A GitGuardian API token with the scan:create-incidents and sources:write permissions
   scopes (Personal Access Token from your GitGuardian workspace settings)
 
 ## Usage
 
 ```sh
-GITGUARDIAN_API_KEY=<token> sh scan.sh --source-name <name> [--output <file.zip>] --send
+GITGUARDIAN_API_KEY=<token> sh scan.sh --source-name <name> --send [--output <file.zip>]
 ```
 
 | Option | Required | Description |
