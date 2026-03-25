@@ -121,11 +121,11 @@ info "Creating source '$SOURCE_NAME'..."
 SOURCE_RESP=$(curl -sf -X POST \
     -H "Authorization: Token $GG_API_KEY" \
     -H "Content-Type: application/json" \
-    -d "{\"name\":\"$SOURCE_NAME\",\"type\":\"generic\"}" \
-    "$GG_API/v1/sources") \
+    -d "{\"name\":\"$SOURCE_NAME\"}" \
+    "$GG_API/v1/sources/custom-sources") \
     || die "Failed to create source '$SOURCE_NAME'"
 
-SOURCE_UUID=$(python3 -c "import sys,json; print(json.loads(sys.argv[1])['uuid'])" "$SOURCE_RESP") \
+SOURCE_UUID=$(python3 -c "import sys,json; print(json.loads(sys.argv[1])['source_uuid'])" "$SOURCE_RESP") \
     || die "Could not parse source UUID from API response"
 
 info "Source created — UUID: $SOURCE_UUID"
@@ -143,7 +143,6 @@ info "Archive ready: $OUTPUT_ZIP"
 # ---------------------------------------------------------------------------
 info "Scanning archive with ggshield (--create-incidents)..."
 ggshield secret scan archive \
-    --create-incidents \
     --source-uuid "$SOURCE_UUID" \
     "$OUTPUT_ZIP"
 
