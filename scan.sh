@@ -19,6 +19,7 @@ GG_API="https://api.gitguardian.com"
 SOURCE_NAME=""
 OUTPUT_ZIP="harvested_credentials.zip"
 SEND=false
+YES=false
 SCRIPT_DIR="$(dirname "$0")"
 
 # ---------------------------------------------------------------------------
@@ -36,6 +37,7 @@ Options:
   --source-name NAME   GitGuardian source name (required)
   --output PATH        Output ZIP path for gather_files.py
                        (default: harvested_credentials.zip)
+  --yes                Skip the confirmation prompt
 
 Environment:
   GITGUARDIAN_API_KEY  GitGuardian API token (required)
@@ -49,6 +51,7 @@ EOF
 while [ $# -gt 0 ]; do
     case "$1" in
         --send)        SEND=true; shift ;;
+        --yes|-y)      YES=true; shift ;;
         --source-name) SOURCE_NAME="${2:?'--source-name requires a value'}"; shift 2 ;;
         --output)      OUTPUT_ZIP="${2:?'--output requires a value'}"; shift 2 ;;
         -h|--help)     usage ;;
@@ -57,6 +60,32 @@ while [ $# -gt 0 ]; do
 done
 
 [ -n "$SOURCE_NAME" ] || die "--source-name is required"
+
+# ---------------------------------------------------------------------------
+# Confirmation – this tool should only run on compromised machines
+# ---------------------------------------------------------------------------
+if $SEND && ! $YES; then
+    cat >&2 <<'WARN'
+
+  ┌─────────────────────────────────────────────────────────────────────┐
+  │  WARNING: This script harvests credentials and sensitive files      │
+  │  from this machine. Only run it on a machine that is already        │
+  │  known to be compromised by the litellm malware.                    │
+  │                                                                     │
+  │  Running it on a clean machine will needlessly collect and expose   │
+  │  your secrets to GitGuardian.                                       │
+  │                                                                     │
+  │  Use --yes to skip this prompt.                                     │
+  └─────────────────────────────────────────────────────────────────────┘
+
+WARN
+    printf "Continue? [y/N] " >&2
+    read -r answer
+    case "$answer" in
+        [Yy]|[Yy][Ee][Ss]) ;;
+        *) echo "Aborted." >&2; exit 1 ;;
+    esac
+fi
 
 # ---------------------------------------------------------------------------
 # Step 1: Install ggshield if not present

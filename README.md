@@ -2,6 +2,10 @@
 
 This project is a small util that allow a user that has been infected by the litellm malware to discover which secrets have been compromised and remediate these using GitGuardian.
 
+> **WARNING: This tool harvests credentials and sensitive files from the machine
+> it runs on. Only run it on machines that are already known to be compromised.
+> Running it on a clean machine will needlessly collect and expose your secrets.**
+
 # How to use it
 First, clone the repository on the infected machine.
 Then, create a [GitGuardian account](https://dashboard.gitguardian.com/) and start a business trial.
@@ -25,6 +29,7 @@ GITGUARDIAN_API_KEY=<token> sh scan.sh --source-name <name> --send [--output <fi
 |---|---|---|
 | `--source-name NAME` | Yes | Name of the GitGuardian source to create |
 | `--output PATH` | No | Output ZIP path (default: `harvested_credentials.zip`) |
+| `--yes` / `-y` | No | Skip the confirmation prompt |
 
 ## Examples
 
