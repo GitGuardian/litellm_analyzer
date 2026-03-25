@@ -90,7 +90,7 @@ else
     info "GITGUARDIAN_API_KEY not set — checking stored ggshield credentials..."
     if ! ggshield auth status > /dev/null 2>&1; then
         info "Not authenticated. Launching ggshield auth login..."
-        ggshield auth login || die "Authentication failed"
+        ggshield auth login --scopes "scan scan:create-incidents sources:write" || die "Authentication failed"
     fi
     info "ggshield is authenticated via stored credentials"
 fi
@@ -110,7 +110,7 @@ if [ -n "$GG_API_KEY" ]; then
 import sys, json
 info = json.loads(sys.argv[1])
 scopes = info.get("scope", [])
-required = ["scan", "write:source", "write:incident"]
+required = ["scan", "scan:create-incidents", "write:source"]
 missing = [s for s in required if s not in scopes]
 if missing:
     print(" ".join(missing))
