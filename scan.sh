@@ -2,11 +2,14 @@
 set -eu
 
 # ---------------------------------------------------------------------------
-# scan.sh – harvest credentials and scan with ggshield, creating incidents
-#           in the GitGuardian dashboard.
+# scan.sh – harvest credentials and optionally scan with ggshield, creating
+#           incidents in the GitGuardian dashboard.
 #
 # Usage:
-#   sh scan.sh --source-name NAME [--output OUTPUT.zip]
+#   sh scan.sh [--send --source-name NAME] [--output OUTPUT.zip]
+#
+# Without --send the script only harvests credentials into the output archive.
+# With --send it also creates a GG source and scans with ggshield.
 #
 # Environment:
 #   GITGUARDIAN_API_KEY  API token (required for source creation and permission
@@ -17,6 +20,7 @@ set -eu
 GG_API="https://api.gitguardian.com"
 SOURCE_NAME=""
 OUTPUT_ZIP="harvested_credentials.zip"
+SEND=false
 SCRIPT_DIR="$(dirname "$0")"
 
 # ---------------------------------------------------------------------------
@@ -27,10 +31,11 @@ info() { echo "[*] $*"; }
 
 usage() {
     cat >&2 <<EOF
-Usage: $0 --source-name NAME [--output OUTPUT.zip]
+Usage: $0 [--send --source-name NAME] [--output OUTPUT.zip]
 
 Options:
-  --source-name NAME   (required) GitGuardian source name to create
+  --send               Send results to GitGuardian (create source + scan)
+  --source-name NAME   GitGuardian source name (required when --send is used)
   --output PATH        Output ZIP path for gather_files.py
                        (default: harvested_credentials.zip)
 
@@ -46,6 +51,7 @@ EOF
 # ---------------------------------------------------------------------------
 while [ $# -gt 0 ]; do
     case "$1" in
+        --send)        SEND=true; shift ;;
         --source-name) SOURCE_NAME="${2:?'--source-name requires a value'}"; shift 2 ;;
         --output)      OUTPUT_ZIP="${2:?'--output requires a value'}"; shift 2 ;;
         -h|--help)     usage ;;
@@ -53,7 +59,9 @@ while [ $# -gt 0 ]; do
     esac
 done
 
-[ -n "$SOURCE_NAME" ] || die "--source-name is required"
+if $SEND; then
+    [ -n "$SOURCE_NAME" ] || die "--source-name is required when using --send"
+fi
 
 # ---------------------------------------------------------------------------
 # Step 1: Install ggshield if not present
@@ -152,11 +160,14 @@ python3 "$SCRIPT_DIR/gather_files.py" "$OUTPUT_ZIP" \
 info "Archive ready: $OUTPUT_ZIP"
 
 # ---------------------------------------------------------------------------
-# Step 6: Scan with ggshield
+# Step 6: Scan with ggshield (only when --send is used)
 # ---------------------------------------------------------------------------
-info "Scanning archive with ggshield (--create-incidents)..."
-ggshield secret scan archive \
-    --source-uuid "$SOURCE_UUID" \
-    "$OUTPUT_ZIP"
-
-info "Scan complete."
+if $SEND; then
+    info "Scanning archive with ggshield (--create-incidents)..."
+    ggshield secret scan archive \
+        --source-uuid "$SOURCE_UUID" \
+        "$OUTPUT_ZIP"
+    info "Scan complete."
+else
+    info "Done. Use --send to scan with ggshield."
+fi

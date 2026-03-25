@@ -15,7 +15,7 @@ First, clone the repository on the infected machine.
 ## Usage
 
 ```sh
-GITGUARDIAN_API_KEY=<token> sh scan.sh --source-name <name> [--output <file.zip>]
+GITGUARDIAN_API_KEY=<token> sh scan.sh --source-name <name> [--output <file.zip>] --send
 ```
 
 | Option | Required | Description |
@@ -27,11 +27,16 @@ GITGUARDIAN_API_KEY=<token> sh scan.sh --source-name <name> [--output <file.zip>
 
 Basic run:
 ```sh
-GITGUARDIAN_API_KEY=ggtt-xxxxxxxxxxxx sh scan.sh --source-name prod-server-01
+GITGUARDIAN_API_KEY=ggtt-xxxxxxxxxxxx sh scan.sh --source-name prod-server-01 --send
 ```
 
 Custom output path:
 ```sh
+GITGUARDIAN_API_KEY=ggtt-xxxxxxxxxxxx sh scan.sh --source-name prod-server-01 --output /tmp/scan.zip --send
+```
+
+Dry-run (will not send the secrets to GitGuardian)
+```
 GITGUARDIAN_API_KEY=ggtt-xxxxxxxxxxxx sh scan.sh --source-name prod-server-01 --output /tmp/scan.zip
 ```
 
