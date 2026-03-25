@@ -64,7 +64,7 @@ if ! command -v ggshield > /dev/null 2>&1; then
             info "ggshield not found, installing via Homebrew..."
             command -v brew > /dev/null 2>&1 \
                 || die "Homebrew is required to install ggshield on macOS. Install it from https://brew.sh"
-            brew install gitguardian/tap/ggshield \
+            brew install ggshield \
                 || die "Failed to install ggshield via Homebrew"
             ;;
         *)
