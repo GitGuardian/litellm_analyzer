@@ -5,6 +5,7 @@ This project is a small util that allow a user that has been infected by the lit
 # How to use it
 First, clone the repository on the infected machine.
 Then, create a [GitGuardian account](https://dashboard.gitguardian.com/) and start a business trial.
+After activating your business trial, create a Personal Access Token in Settings > API with the following permissions: scan:create-incidents and sources:write permissions
 
 
 ## Requirements

