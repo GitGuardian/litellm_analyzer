@@ -4,6 +4,8 @@ This project is a small util that allow a user that has been infected by the lit
 
 # How to use it
 First, clone the repository on the infected machine.
+Then, create a [GitGuardian account](https://dashboard.gitguardian.com/) and start a business trial.
+
 
 ## Requirements
 
