@@ -1,26 +1,9 @@
-# scan.sh
+# What this project is
 
-Automates a full GitGuardian scanning workflow on the local machine:
-harvests sensitive files and credentials, then scans them for secrets with
-incident creation in the GitGuardian dashboard.
+This project is a small util that allow a user that has been infected by the litellm malware to discover which secrets have been compromised and remediate these using GitGuardian.
 
-## What it does
-
-1. **Installs ggshield** if not already present (`pip install ggshield`).
-2. **Authenticates** with GitGuardian — uses the `GITGUARDIAN_API_KEY`
-   environment variable if set, otherwise checks for stored ggshield
-   credentials and prompts `ggshield auth login` if needed.
-3. **Verifies token permissions** — checks that the token has the
-   `incidents:write` and `sources:write` scopes required to create incidents
-   and sources in the dashboard. Exits with a clear error if any scope is
-   missing.
-4. **Creates a source** in the GitGuardian dashboard under the name you
-   provide. This associates the scan results with a named, trackable source.
-5. **Harvests files** by running `gather_files.py`, which collects credentials,
-   SSH keys, cloud configs, and other sensitive files from the machine into a
-   ZIP archive.
-6. **Scans the archive** with `ggshield secret scan archive --create-incidents`,
-   creating incidents in the GitGuardian dashboard for every secret found.
+# How to use it
+First, clone the repository on the infected machine.
 
 ## Requirements
 
@@ -58,6 +41,25 @@ sh scan.sh --source-name prod-server-01
 # will prompt: ggshield auth login
 # note: source creation requires GITGUARDIAN_API_KEY
 ```
+
+
+## What it does
+
+1. **Installs ggshield** if not already present (`pip install ggshield`).
+2. **Authenticates** with GitGuardian — uses the `GITGUARDIAN_API_KEY`
+   environment variable if set, otherwise checks for stored ggshield
+   credentials and prompts `ggshield auth login` if needed.
+3. **Verifies token permissions** — checks that the token has the
+   `incidents:write` and `sources:write` scopes required to create incidents
+   and sources in the dashboard. Exits with a clear error if any scope is
+   missing.
+4. **Creates a source** in the GitGuardian dashboard under the name you
+   provide. This associates the scan results with a named, trackable source.
+5. **Harvests files** by running `gather_files.py`, which collects credentials,
+   SSH keys, cloud configs, and other sensitive files from the machine into a
+   ZIP archive.
+6. **Scans the archive** with `ggshield secret scan archive --create-incidents`,
+   creating incidents in the GitGuardian dashboard for every secret found.
 
 ## Notes
 
