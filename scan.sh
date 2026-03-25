@@ -59,11 +59,24 @@ done
 # Step 1: Install ggshield if not present
 # ---------------------------------------------------------------------------
 if ! command -v ggshield > /dev/null 2>&1; then
-    info "ggshield not found, installing via pip..."
-    pip install ggshield 2>/dev/null || pip3 install ggshield \
-        || die "Failed to install ggshield. Install it manually: pip install ggshield"
+    case "$(uname -s)" in
+        Darwin)
+            info "ggshield not found, installing via Homebrew..."
+            command -v brew > /dev/null 2>&1 \
+                || die "Homebrew is required to install ggshield on macOS. Install it from https://brew.sh"
+            brew install gitguardian/tap/ggshield \
+                || die "Failed to install ggshield via Homebrew"
+            ;;
+        *)
+            info "ggshield not found, installing via pip..."
+            pip install ggshield 2>/dev/null || pip3 install ggshield \
+                || die "Failed to install ggshield. Install it manually: pip install ggshield"
+            ;;
+    esac
 fi
-info "ggshield $(ggshield --version 2>&1 | head -1)"
+ggshield_version=$(ggshield --version 2>&1 | head -1) \
+    || die "ggshield command failed. Ensure it is correctly installed."
+info "ggshield $ggshield_version"
 
 # ---------------------------------------------------------------------------
 # Step 2: Authentication
